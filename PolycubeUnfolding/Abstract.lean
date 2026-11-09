@@ -32,16 +32,16 @@ def IsProtoCell (P : Protopolycube) (C : Protocell) : Prop :=
 
 abbrev RealPoint := Fin 3 → ℝ
 
+abbrev Square := Set RealPoint
+
+abbrev Cell := Square × Point
+
 def Cube (p : Point) : Set RealPoint :=
   {x | ∀ i, p i ≤ x i ∧ x i ≤ p i + 1}
 
 /-- The solid body of a prototile: the union of the unit cubes `p + [0, 1]³`, `p ∈ P`. -/
 def Polycube (P : Protopolycube) : Set RealPoint :=
   {x | ∃ p ∈ P, ∀ i, p i ≤ x i ∧ x i ≤ p i + 1}
-
-/-- The square of a cell -/
-def Cell (C : Protocell) : Set RealPoint :=
-  Cube C.1 ∩ Cube C.2
 
 /-- A n-layers flat polycube only contains points of z coordinates between 0 and n,
   and if a point (x, y, z) is in the polycube, the whole vertical segment from (x, y, 0)
@@ -50,6 +50,30 @@ def Flat (P : Set RealPoint) (n : ℝ) : Prop :=
   (∀ x ∈ P, x 2 ∈ Set.Icc 0 n) ∧
   (∀ x ∈ P, ∀ z ∈ Set.Icc 0 n,
     Function.update x 2 z ∈ P)
+
+/-- The square of a cell : Square × Normal -/
+def CellFromProto (C : Protocell) : Square × Point :=
+  (Cube C.1 ∩ Cube C.2,
+  C.2 - C.1)
+
+def UniqueTripoint (C : Cell) (N1 : Cell) (N2 : Cell) : Prop :=
+  ∃! p : Point, p ∈ C.1 ∩ N1.1 ∩ N2.1
+
+def TriPoint (C : Cell) (N1 : Cell) (N2 : Cell) (h : UniqueTripoint C N1 N2) :=
+  Classical.choose C.1 ∩ N1.1 ∩ N2.1
+
+def UniqueEndPoint (C : Cell) (N : Cell) (X : Cell) : Prop :=
+  ∃! p : Point, p ∈ (Set.univ Point ∩ C.1 ∩ N.1) \ X.1
+
+def EndPoint (C : Cell) (N : Cell) (X : Cell) (h : UniqueEndPoint C N X) : Point :=
+  Classical.choose (Set.univ Point ∩ C.1 ∩ N.1) \ X.1
+
+def AreSuccessive (C : Cell) (N1 : Cell) (N2 : Cell) : Prop :=
+  -- EndPoint C N2 N1 - Tripoint - EndPoint C N1 N2 is a right turn around the normal of C.
+  true
+
+abbrev CellNeighborhood := Fin 4 → Square
+
 
 -- TODO : cell map thing, non-degenerate property, flat property...
 
